@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribución Geográfica — Proyectos Consultoría Contracorriente (2016–2021)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 1000px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 4px solid #f39c12;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        #map {
+            width: 100%;
+            height: 500px;
+            z-index: 1;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 11px;
+            color: #555;
+            text-align: center;
+        }
+        
+        .legend-info {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .size-sm { background: #3498db; }
+        .size-md { background: #e74c3c; }
+        .size-lg { background: #f39c12; }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 18px;
+            }
+            #map {
+                height: 350px;
+            }
+            .stats {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 Distribución Geográfica de Proyectos</h1>
+            <p>Consultoría Contracorriente S.A. de C.V. (2016–2021)</p>
+            <p>Mtro. Gerardo Luna Sánchez — Analista y Encargado de Proyectos</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span><span class="stat-value">29</span> proyectos</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-poll"></i>
+                    <span><span class="stat-value">22,697</span> cuestionarios</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-map-marker"></i>
+                    <span><span class="stat-value">9</span> localidades</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-state-united"></i>
+                    <span><span class="stat-value">2</span> estados</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="footer">
+            <div class="legend-info">
+                <div class="legend-item">
+                    <div class="legend-circle size-sm"></div>
+                    <span>1 proyecto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle size-md"></div>
+                    <span>2–4 proyectos</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle size-lg"></div>
+                    <span>7+ proyectos</span>
+                </div>
+            </div>
+            <p style="margin-top: 10px;">Elaboración propia. Fuente: Registro de proyectos realizados en Consultoría Contracorriente (2016–2021)</p>
+        </div>
+    </div>
+    
+    <script>
+        // Inicializar mapa centrado en Puebla
+        const map = L.map('map').setView([19.04, -98.28], 9);
+        
+        // Capa de mapa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            minZoom: 8
+        }).addTo(map);
+        
+        // Datos de localidades
+        const localidades = [
+            {
+                nombre: "Puebla capital",
+                lat: 19.043733,
+                lng: -98.198024,
+                proyectos: 7,
+                cuestionarios: 7330,
+                tipo: "Electoral municipal, estatal, satisfacción, comunicación"
+            },
+            {
+                nombre: "San Andrés Cholula",
+                lat: 19.059957,
+                lng: -98.294915,
+                proyectos: 7,
+                cuestionarios: 4330,
+                tipo: "Electoral municipal, 4 trackings semanales 2021"
+            },
+            {
+                nombre: "Tepeaca",
+                lat: 18.965955,
+                lng: -97.899376,
+                proyectos: 4,
+                cuestionarios: 2064,
+                tipo: "Posicionamiento electoral, evaluación de gobierno"
+            },
+            {
+                nombre: "Tlatlauquitepec",
+                lat: 19.816011,
+                lng: -97.497947,
+                proyectos: 2,
+                cuestionarios: 857,
+                tipo: "Electoral municipal"
+            },
+            {
+                nombre: "San Pedro Cholula",
+                lat: 19.071505,
+                lng: -98.315674,
+                proyectos: 2,
+                cuestionarios: 1105,
+                tipo: "Electoral municipal"
+            },
+            {
+                nombre: "Teziutlán",
+                lat: 19.816011,
+                lng: -97.357058,
+                proyectos: 2,
+                cuestionarios: 750,
+                tipo: "Posicionamiento municipal"
+            },
+            {
+                nombre: "Izúcar de Matamoros",
+                lat: 18.602095,
+                lng: -98.465701,
+                proyectos: 1,
+                cuestionarios: 551,
+                tipo: "Electoral municipal"
+            },
+            {
+                nombre: "Apizaco, Tlaxcala",
+                lat: 19.415881,
+                lng: -98.139318,
+                proyectos: 1,
+                cuestionarios: 396,
+                tipo: "Distrito electoral (marzo 2016)"
+            },
+            {
+                nombre: "Distrito Tepeaca, Tlaxcala",
+                lat: 19.313924,
+                lng: -98.240440,
+                proyectos: 1,
+                cuestionarios: 600,
+                tipo: "Distrito electoral (febrero 2018)"
+            }
+        ];
+        
+        // Función para obtener tamaño de círculo según número de proyectos
+        function obtenerRadio(proyectos) {
+            if (proyectos >= 7) return 40;
+            if (proyectos >= 4) return 30;
+            if (proyectos >= 2) return 22;
+            return 15;
+        }
+        
+        // Función para obtener color según número de proyectos
+        function obtenerColor(proyectos) {
+            if (proyectos >= 7) return '#f39c12';  // Naranja/Amarillo
+            if (proyectos >= 4) return '#e74c3c';  // Rojo
+            if (proyectos >= 2) return '#3498db';  // Azul
+            return '#2ecc71';  // Verde
+        }
+        
+        // Agregar marcadores al mapa
+        localidades.forEach(localidad => {
+            const radio = obtenerRadio(localidad.proyectos);
+            const color = obtenerColor(localidad.proyectos);
+            
+            // Crear círculo
+            L.circleMarker([localidad.lat, localidad.lng], {
+                radius: radio / 2,
+                fillColor: color,
+                color: 'white',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.85,
+                className: 'circle-marker'
+            })
+            .bindPopup(`
+                <div style="font-family: Arial; font-size: 13px; width: 220px;">
+                    <h3 style="margin: 0 0 8px 0; color: #1e3c72; border-bottom: 2px solid ${color}; padding-bottom: 5px;">
+                        ${localidad.nombre}
+                    </h3>
+                    <p style="margin: 6px 0;"><strong>Proyectos:</strong> ${localidad.proyectos}</p>
+                    <p style="margin: 6px 0;"><strong>Cuestionarios:</strong> ${localidad.cuestionarios.toLocaleString('es-MX')}</p>
+                    <p style="margin: 6px 0; font-size: 12px; color: #666;"><strong>Tipo:</strong> ${localidad.tipo}</p>
+                </div>
+            `)
+            .addTo(map);
+            
+            // Añadir etiqueta con número de proyectos
+            L.marker([localidad.lat, localidad.lng], {
+                icon: L.divIcon({
+                    className: 'number-icon',
+                    html: `<div style="
+                        background: white;
+                        border-radius: 50%;
+                        width: 28px;
+                        height: 28px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: bold;
+                        font-size: 14px;
+                        color: ${color};
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        border: 2px solid ${color};
+                    ">${localidad.proyectos}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                })
+            }).addTo(map);
+        });
+        
+        // Fit bounds automático
+        const group = new L.featureGroup(
+            localidades.map(l => L.latLng(l.lat, l.lng))
+        );
+        map.fitBounds(group.getBounds().pad(0.1), { maxZoom: 9 });
+    </script>
+</body>
+</html>
